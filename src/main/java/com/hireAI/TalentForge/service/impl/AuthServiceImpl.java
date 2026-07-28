@@ -6,6 +6,7 @@ import com.hireAI.TalentForge.dto.auth.RegisterRequest;
 import com.hireAI.TalentForge.entity.User;
 import com.hireAI.TalentForge.repository.UserRepository;
 import com.hireAI.TalentForge.service.Interface.AuthService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -13,9 +14,11 @@ import java.util.Optional;
 @Service
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public  AuthServiceImpl(UserRepository userRepository){
+    public  AuthServiceImpl(UserRepository userRepository,PasswordEncoder passwordEncoder){
         this.userRepository=userRepository;
+        this.passwordEncoder=passwordEncoder;
     }
 
     @Override
@@ -29,11 +32,11 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Email already exists");
         }
         user.setEmail(request.getEmail());
-
         if (!request.getPassword().equals(request.getConfirmPassword())) {
             throw new RuntimeException("Passwords do not match");
         }
-        user.setPassword(request.getPassword());
+        String encodedPassword=passwordEncoder.encode(request.getPassword());
+        user.setPassword(encodedPassword);
         user.setRole(request.getRole());
         User savedUser=userRepository.save(user);
         //For now Id is the token here until we complete the project
@@ -45,13 +48,14 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse login(LoginRequest request) {
-        Optional<User> user_email=userRepository.findByEmail(request.getEmail());
-        if (user_email.isEmpty()){
+        Optional<User> optionalUser=userRepository.findByEmail(request.getEmail());
+        if (optionalUser.isEmpty()){
             throw new RuntimeException("Email not registered");
         }
-        User user=user_email.get();
+        User user=optionalUser.get();
         String password=request.getPassword();
-        if(!user.getPassword().equals(password)){
+        boolean isPasswordMatched=passwordEncoder.matches(password,user.getPassword());
+        if(!isPasswordMatched){
             throw new RuntimeException("Please retry the password");
         }
         return new AuthResponse("Login Successfull","userTokenID :"+String.valueOf(user.getId()),user.getRole());
