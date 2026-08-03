@@ -10,7 +10,7 @@ The platform enables recruiters to create interview sessions, candidates to part
 - Role-Based Authorization
 - Secure REST APIs
 - Password Encryption using BCrypt
-### AI Interview Module
+  ### AI Interview Module
 - AI-generated interview questions
 - Questions generated using Google Gemini API
 - Questions based on:
