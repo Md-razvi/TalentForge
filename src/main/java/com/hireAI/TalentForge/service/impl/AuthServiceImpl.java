@@ -15,10 +15,13 @@ import java.util.Optional;
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
-    public  AuthServiceImpl(UserRepository userRepository,PasswordEncoder passwordEncoder){
+    private final JwtServiceImpl jwtService;
+    public  AuthServiceImpl(UserRepository userRepository,
+                            PasswordEncoder passwordEncoder,
+                            JwtServiceImpl jwtService){
         this.userRepository=userRepository;
         this.passwordEncoder=passwordEncoder;
+        this.jwtService=jwtService;
     }
 
     @Override
@@ -58,6 +61,7 @@ public class AuthServiceImpl implements AuthService {
         if(!isPasswordMatched){
             throw new RuntimeException("Please retry the password");
         }
-        return new AuthResponse("Login Successfull","userTokenID :"+String.valueOf(user.getId()),user.getRole());
+        String token=jwtService.generateToken(user);
+        return new AuthResponse("Login Success full",token,user.getRole());
     }
 }
